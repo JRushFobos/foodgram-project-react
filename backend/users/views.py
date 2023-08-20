@@ -4,7 +4,7 @@ from djoser.views import UserViewSet
 from rest_framework import exceptions, status
 from rest_framework.decorators import action
 from rest_framework.permissions import (
-    AllowAny,
+    IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ User = get_user_model()
 
 
 class UserViewSet(UserViewSet):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = CustomPageNumberPagination
 
     @action(
@@ -62,7 +62,7 @@ class UserViewSet(UserViewSet):
                 user=user, author=author
             ).exists():
                 raise exceptions.ValidationError(
-                    'Подписка не была оформлена, либо уже удалена.'
+                    'Подписка отсутствует, либо уже удалена.'
                 )
 
             subscription = get_object_or_404(
