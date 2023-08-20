@@ -17,7 +17,7 @@ User = get_user_model()
 
 
 class UserViewSet(UserViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = CustomPageNumberPagination
 
     @action(
