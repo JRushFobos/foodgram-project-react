@@ -9,11 +9,11 @@ User = get_user_model()
 
 class UserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField(
-        method_name='get_is_subscribed'
+        method_name="get_is_subscribed"
     )
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         if user.is_anonymous:
             return False
@@ -23,20 +23,20 @@ class UserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'is_subscribed',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_subscribed",
         )
         ordering = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'is_subscribed',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_subscribed",
         )
 
 
@@ -44,20 +44,20 @@ class UserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
         fields = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'password',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
         )
         ordering = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'password',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
         )
 
 
@@ -65,18 +65,18 @@ class SubscriptionSerializer(UserSerializer):
     class Meta:
         model = User
         fields = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'is_subscribed',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_subscribed",
         )
         ordering = (
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'email',
-            'is_subscribed',
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_subscribed",
         )

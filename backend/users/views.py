@@ -41,7 +41,7 @@ class UserViewSet(UserViewSet):
         serializer_class=SubscriptionSerializer,
     )
     def subscribe(self, request, id=None):
-        """Создание и удаление подписок"""
+        """Создание и удаление подписок."""
         user = self.request.user
         author = get_object_or_404(User, pk=id)
 
