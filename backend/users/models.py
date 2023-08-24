@@ -6,6 +6,8 @@ MAX_EMAIL_LENGTH = 254
 
 
 class User(AbstractUser):
+    """Модель пользователей"""
+
     email = models.EmailField(
         'Email',
         max_length=MAX_EMAIL_LENGTH,
@@ -45,6 +47,8 @@ class User(AbstractUser):
 
 
 class Subscription(models.Model):
+    """Модель подписчиков"""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
