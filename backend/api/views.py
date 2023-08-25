@@ -37,11 +37,13 @@ TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
+    pagination_class = None
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
+    pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
