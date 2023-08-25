@@ -7,7 +7,7 @@ from recipes.models import Tag, FavouriteRecipe, Recipe, ShoppingList
 CHOICES_LIST = (('0', 'False'), ('1', 'True'))
 
 
-class RecipeFilter(rest_framework.FilterSet):
+class RecipesFilter(rest_framework.FilterSet):
     is_FavouriteReciped = rest_framework.ChoiceFilter(
         choices=CHOICES_LIST, method='is_FavouriteReciped_method'
     )
