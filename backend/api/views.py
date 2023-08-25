@@ -62,16 +62,16 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             return Recipe.objects.annotate(
                 is_favorited=Case(
-                    When(favourite_recipes__user=self.request.user, then=1),
+                    When(favourites__user=self.request.user, then=1),
                     default=0,
                     output_field=IntegerField(),
                 ),
                 is_in_shopping_cart=Case(
-                    When(shopping_lists__user=self.request.user, then=1),
+                    When(shoppinglist__user=self.request.user, then=1),
                     default=0,
                     output_field=IntegerField(),
                 ),
-            ).prefetch_related('favourite_recipes', 'shopping_lists')
+            ).prefetch_related('favourites', 'shoppinglist')
         else:
             return Recipe.objects.annotate(
                 is_favorited=Value(0, output_field=IntegerField()),
