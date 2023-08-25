@@ -28,6 +28,7 @@ from .serializers import (
 )
 from .filters import RecipesFilter
 from .permissions import IsAuthorOrAdminOrReadOnly
+from .paginations import CustomPageNumberPagination
 
 FILE_NAME = "shopping-list.txt"
 TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
@@ -48,6 +49,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
     filter_class = RecipesFilter
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
         """Сериализаторы для рецептов."""
