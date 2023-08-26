@@ -35,22 +35,26 @@ TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет тегов"""
+
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет ингридиентов"""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
     pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
-    """Класс взаимодействия с моделью Recipes. Вьюсет для рецептов."""
+    """Вьюсет для рецептов."""
 
     permission_classes = (IsAuthorOrAdminOrReadOnly,)
-    filter_class = RecipesFilter
+    filterset_class = RecipesFilter
     pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
@@ -60,7 +64,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return RecipesWriteSerializer
 
     def get_queryset(self):
-        """Резюме по объектам с помощью annotate()."""
         if self.request.user.is_authenticated:
             return Recipe.objects.annotate(
                 is_favorited=Case(
@@ -158,21 +161,24 @@ class RecipesViewSet(viewsets.ModelViewSet):
         methods=["GET"], detail=False, permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        """Скачать файл листа покупок."""
-        ingredients = (
-            RecipeIngredients.objects.filter(recipe__list__user=request.user)
-            .values("ingredient__name", "ingredient__measurement_unit")
-            .order_by("ingredient__name")
-            .annotate(total=Sum("amount"))
+        shopping_cart = ShoppingList.objects.filter(user=self.request.user)
+        recipes = [item.recipe.id for item in shopping_cart]
+        buy_list = (
+            RecipeIngredients.objects.filter(recipe__in=recipes)
+            .values('ingredient')
+            .annotate(amount=Sum('amount'))
         )
-        result = TITLE_SHOP_LIST
-        result += "\n".join(
-            (
-                f'{ingredient["ingredient__name"]} - {ingredient["total"]}/'
-                f'{ingredient["ingredient__measurement_unit"]}'
-                for ingredient in ingredients
+
+        buy_list_text = TITLE_SHOP_LIST
+        for item in buy_list:
+            ingredient = Ingredient.objects.get(pk=item['ingredient'])
+            amount = item['amount']
+            buy_list_text += (
+                f'{ingredient.name}, {amount} '
+                f'{ingredient.measurement_unit}\n'
             )
-        )
-        response = HttpResponse(result, content_type="text/plain")
-        response["Content-Disposition"] = f"attachment; filename={FILE_NAME}"
+
+        response = HttpResponse(buy_list_text, content_type="text/plain")
+        response['Content-Disposition'] = f'attachment; filename={FILE_NAME}'
+
         return response

@@ -18,12 +18,16 @@ User = get_user_model()
 
 
 class TagsSerializer(serializers.ModelSerializer):
+    """Сериализатор тегов."""
+
     class Meta:
         model = Tag
         fields = "__all__"
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
+
     class Meta:
         model = Ingredient
         fields = "__all__"
@@ -40,10 +44,9 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = "__all__"
+        exclude = ('pub_date',)
 
     def get_ingredients(self, obj):
-        """Получение ингредиентов."""
         ingredients_data = obj.ingredients.through.objects.filter(
             recipe=obj
         ).values(
@@ -52,7 +55,20 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             "ingredient__measurement_unit",
             "amount",
         )
-        return ingredients_data
+        modified_ingredients = []
+
+        for ingredient_data in ingredients_data:
+            modified_ingredient = {
+                "id": ingredient_data["ingredient__id"],
+                "name": ingredient_data["ingredient__name"],
+                "measurement_unit": ingredient_data[
+                    "ingredient__measurement_unit"
+                ],
+                "amount": ingredient_data["amount"],
+            }
+            modified_ingredients.append(modified_ingredient)
+
+        return modified_ingredients
 
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
@@ -243,7 +259,7 @@ class CheckFavouriteSerializer(serializers.ModelSerializer):
 
         if self.context.get("request").method == "POST" and favorite:
             raise serializers.ValidationError(
-                "Этот рецепт уже добавлен в избранном"
+                "Этот рецепт уже добавлен в избранное"
             )
         if self.context.get("request").method == "DELETE" and not favorite:
             raise serializers.ValidationError(
@@ -266,7 +282,7 @@ class CheckShoppingCartSerializer(serializers.ModelSerializer):
         """Валидация добавления в корзину."""
         user = self.context["request"].user
         recipe = obj["recipe"]
-        shop_list = user.list.filter(recipe=recipe).exists()
+        shop_list = user.favourites.filter(recipe=recipe).exists()
 
         if self.context.get("request").method == "POST" and shop_list:
             raise serializers.ValidationError(
