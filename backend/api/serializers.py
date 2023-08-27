@@ -34,7 +34,7 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 
 class RecipesReadSerializer(serializers.ModelSerializer):
-    """Сериализация объектов типа Recipes. Чтение рецептов."""
+    """Сериализатор чтения рецептов."""
 
     tags = TagsSerializer(many=True)
     author = CustomUserSerializer()
@@ -72,7 +72,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
-    """Сериализация объектов типа Recipes. Запись рецептов."""
+    """Сериализатор записи рецептов."""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all()
@@ -86,7 +86,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("author",)
 
     def get_ingredients(self, obj):
-        """Получение ингредиентов."""
         ingredients_data = obj.ingredients.through.objects.filter(
             recipe=obj
         ).values(
@@ -96,7 +95,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return ingredients_data
 
     def validate(self, data):
-        """Валидация ингредиентов при заполнении рецепта."""
         ingredients = self.initial_data["ingredients"]
         ingredient_list = []
         if not ingredients:
@@ -116,13 +114,11 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return data
 
     def validate_cooking_time(self, time):
-        """Валидация времени приготовления."""
         if int(time) < 1:
             raise serializers.ValidationError("Минимальное время = 1")
         return time
 
     def add_ingredients_and_tags(self, instance, **validate_data):
-        """Добавление ингредиентов тегов."""
         ingredients = validate_data["ingredients"]
         tags = validate_data["tags"]
         for tag in tags:

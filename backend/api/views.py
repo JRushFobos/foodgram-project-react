@@ -35,7 +35,7 @@ TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет тегов"""
+    """Вьюсет тегов."""
 
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
@@ -43,7 +43,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет ингридиентов"""
+    """Вьюсет ингридиентов."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer

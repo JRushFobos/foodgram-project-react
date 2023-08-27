@@ -12,6 +12,8 @@ CHOICES_LIST = (('0', 'False'), ('1', 'True'))
 
 
 class ShoppingListFilter(FilterSet):
+    """Фильтр для is_in_shopping_cart в рецептах"""
+
     is_in_shopping_cart = rest_framework.ChoiceFilter(
         choices=CHOICES_LIST, method='filter_is_in_shopping_cart'
     )
@@ -34,6 +36,8 @@ class ShoppingListFilter(FilterSet):
 
 
 class FavoriteFilter(FilterSet):
+    """Фильтр для is_favorited в рецептах"""
+
     is_favorited = rest_framework.ChoiceFilter(
         choices=CHOICES_LIST, method='filter_is_favorited'
     )
@@ -56,6 +60,8 @@ class FavoriteFilter(FilterSet):
 
 
 class RecipesFilter(FilterSet):
+    """Фильтры для GET метода рецептов"""
+
     is_favorited = rest_framework.ChoiceFilter(
         choices=CHOICES_LIST, method='filter_is_favorited'
     )
