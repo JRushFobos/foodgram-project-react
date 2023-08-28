@@ -278,7 +278,7 @@ class CheckShoppingCartSerializer(serializers.ModelSerializer):
         """Валидация добавления в корзину."""
         user = self.context["request"].user
         recipe = obj["recipe"]
-        shop_list = user.favourites.filter(recipe=recipe).exists()
+        shop_list = user.shoppinglist.filter(recipe=recipe).exists()
 
         if self.context.get("request").method == "POST" and shop_list:
             raise serializers.ValidationError(
