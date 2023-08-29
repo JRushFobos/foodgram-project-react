@@ -23,7 +23,7 @@ from .serializers import (
     RecipesWriteSerializer,
     RecipesReadSerializer,
     CheckFavouriteSerializer,
-    CheckShoppingCartSerializer,
+    ShoppingCartSerializer,
     RecipeAddingSerializer,
 )
 from .filters import RecipesFilter
@@ -76,7 +76,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                     default=0,
                     output_field=IntegerField(),
                 ),
-            ).prefetch_related('favourites', 'shoppinglist')
+            ).prefetch_related("favourites", "shoppinglist")
         else:
             return Recipe.objects.annotate(
                 is_favorited=Value(0, output_field=IntegerField()),
@@ -124,7 +124,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             "user": request.user.id,
             "recipe": pk,
         }
-        serializer = CheckShoppingCartSerializer(
+        serializer = ShoppingCartSerializer(
             data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
@@ -137,7 +137,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             "user": request.user.id,
             "recipe": pk,
         }
-        serializer = CheckShoppingCartSerializer(
+        serializer = ShoppingCartSerializer(
             data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
@@ -145,7 +145,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic()
     def add_object(self, model, user, pk):
-        """Добавление объектов для избранного/спсика покупок."""
+        """Добавление объектов в избранное/в список покупок."""
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(user=user, recipe=recipe)
         serializer = RecipeAddingSerializer(recipe)
@@ -153,7 +153,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic()
     def delete_object(self, model, user, pk):
-        """Удаление объектов для избранного/спсика покупок."""
+        """Удаление объектов из избранного/из списка покупок."""
         model.objects.filter(user=user, recipe__id=pk).delete()
         return Response(status=HTTPStatus.NO_CONTENT)
 
@@ -165,20 +165,20 @@ class RecipesViewSet(viewsets.ModelViewSet):
         recipes = [item.recipe.id for item in shopping_cart]
         buy_list = (
             RecipeIngredients.objects.filter(recipe__in=recipes)
-            .values('ingredient')
-            .annotate(amount=Sum('amount'))
+            .values("ingredient")
+            .annotate(amount=Sum("amount"))
         )
 
         buy_list_text = TITLE_SHOP_LIST
         for item in buy_list:
-            ingredient = Ingredient.objects.get(pk=item['ingredient'])
-            amount = item['amount']
+            ingredient = Ingredient.objects.get(pk=item["ingredient"])
+            amount = item["amount"]
             buy_list_text += (
-                f'{ingredient.name}, {amount} '
-                f'{ingredient.measurement_unit}\n'
+                f"{ingredient.name}, {amount} "
+                f"{ingredient.measurement_unit}\n"
             )
 
         response = HttpResponse(buy_list_text, content_type="text/plain")
-        response['Content-Disposition'] = f'attachment; filename={FILE_NAME}'
+        response["Content-Disposition"] = f"attachment; filename={FILE_NAME}"
 
         return response

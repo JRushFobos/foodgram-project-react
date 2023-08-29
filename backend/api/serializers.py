@@ -264,7 +264,7 @@ class CheckFavouriteSerializer(serializers.ModelSerializer):
         return obj
 
 
-class CheckShoppingCartSerializer(serializers.ModelSerializer):
+class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализация объектов типа shoppingLists.Листа покупок."""
 
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
