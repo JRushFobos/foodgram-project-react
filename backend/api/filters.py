@@ -9,7 +9,7 @@ CHOICES_LIST = (('0', 'False'), ('1', 'True'))
 
 
 class RecipesFilter(FilterSet):
-    """Фильтры для GET метода рецептов"""
+    """Фильтры для shoppinglist и favourites рецептов"""
 
     is_favorited = rest_framework.NumberFilter(method='filter_is_favorited')
     is_in_shopping_cart = rest_framework.NumberFilter(

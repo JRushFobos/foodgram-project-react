@@ -63,8 +63,8 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        verbose_name = 'подписка'
-        verbose_name_plural = 'Подписки'
+        verbose_name = 'Подписки'
+        verbose_name_plural = 'Подписчики'
 
         constraints = (
             models.CheckConstraint(

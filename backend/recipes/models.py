@@ -208,7 +208,7 @@ class ShoppingList(models.Model):
 
     class Meta:
         verbose_name = "Список покупок"
-        verbose_name_plural = "Списки покупок"
+        verbose_name_plural = "Корзина для продуктов"
         ordering = ("-id",)
         constraints = [
             models.UniqueConstraint(

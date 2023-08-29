@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "recipes.apps.RecipesConfig",
     "rest_framework.authtoken",
-    'rest_framework',
+    "rest_framework",
     "djoser",
     "django_filters",
 ]
@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 ROOT_URLCONF = "foodgram.urls"
 
@@ -152,7 +153,7 @@ DJOSER = {
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru"
 
 TIME_ZONE = "UTC"
 
