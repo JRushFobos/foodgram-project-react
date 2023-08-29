@@ -24,7 +24,6 @@ from .serializers import (
     RecipesReadSerializer,
     CheckFavouriteSerializer,
     ShoppingCartSerializer,
-    RecipeAddingSerializer,
 )
 from .filters import RecipesFilter
 from .permissions import IsAuthorOrAdminOrReadOnly

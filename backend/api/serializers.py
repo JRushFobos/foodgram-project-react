@@ -12,7 +12,6 @@ from recipes.models import (
     ShoppingList,
 )
 from users.serializers import CustomUserSerializer
-from users.models import Subscription
 
 User = get_user_model()
 
@@ -155,86 +154,86 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class RecipeAddingSerializer(serializers.ModelSerializer):
-    """
-    Сериализация объектов типа Recipes.
-    Добавление в избранное/список покупок.
-    """
+# class RecipeAddingSerializer(serializers.ModelSerializer):
+#     """
+#     Сериализация объектов типа Recipes.
+#     Добавление в избранное/список покупок.
+#     """
 
-    class Meta:
-        model = Recipe
-        fields = ("id", "name", "image", "cooking_time")
-        read_only_fields = ("id", "name", "image", "cooking_time")
-
-
-class FollowSerializer(serializers.ModelSerializer):
-    """Сериализация объектов типа Follow. Подписки."""
-
-    id = serializers.ReadOnlyField(source="author.id")
-    email = serializers.ReadOnlyField(source="author.email")
-    username = serializers.ReadOnlyField(source="author.username")
-    first_name = serializers.ReadOnlyField(source="author.first_name")
-    last_name = serializers.ReadOnlyField(source="author.last_name")
-    is_subscribed = serializers.SerializerMethodField()
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Subscription
-        fields = (
-            "id",
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "recipes",
-            "recipes_count",
-        )
-
-    def get_recipes(self, obj):
-        """Получение рецептов автора."""
-        request = self.context.get("request")
-        limit = request.GET.get("recipes_limit")
-        queryset = obj.author.recipes.all()
-        if limit:
-            queryset = queryset[: int(limit)]
-        return RecipeAddingSerializer(queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.author.recipes.all().count()
+#     class Meta:
+#         model = Recipe
+#         fields = ("id", "name", "image", "cooking_time")
+#         read_only_fields = ("id", "name", "image", "cooking_time")
 
 
-class CheckSubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализация объектов типа Follow. Проверка подписки."""
+# class FollowSerializer(serializers.ModelSerializer):
+#     """Сериализация объектов типа Follow. Подписки."""
 
-    class Meta:
-        model = Subscription
-        fields = ("user", "author")
+#     id = serializers.ReadOnlyField(source="author.id")
+#     email = serializers.ReadOnlyField(source="author.email")
+#     username = serializers.ReadOnlyField(source="author.username")
+#     first_name = serializers.ReadOnlyField(source="author.first_name")
+#     last_name = serializers.ReadOnlyField(source="author.last_name")
+#     is_subscribed = serializers.SerializerMethodField()
+#     recipes = serializers.SerializerMethodField()
+#     recipes_count = serializers.SerializerMethodField()
 
-    def validate(self, obj):
-        """Валидация подписки."""
-        user = obj["user"]
-        author = obj["author"]
-        subscribed = user.follower.filter(author=author).exists()
+#     class Meta:
+#         model = Subscription
+#         fields = (
+#             "id",
+#             "email",
+#             "username",
+#             "first_name",
+#             "last_name",
+#             "is_subscribed",
+#             "recipes",
+#             "recipes_count",
+#         )
 
-        if self.context.get("request").method == "POST":
-            if user == author:
-                raise serializers.ValidationError(
-                    "Ошибка, на себя подписка не разрешена"
-                )
-            if subscribed:
-                raise serializers.ValidationError("Ошибка, вы уже подписались")
-        if self.context.get("request").method == "DELETE":
-            if user == author:
-                raise serializers.ValidationError(
-                    "Ошибка, отписка от самого себя не разрешена"
-                )
-            if not subscribed:
-                raise serializers.ValidationError(
-                    {"errors": "Ошибка, вы уже отписались"}
-                )
-        return obj
+#     def get_recipes(self, obj):
+#         """Получение рецептов автора."""
+#         request = self.context.get("request")
+#         limit = request.GET.get("recipes_limit")
+#         queryset = obj.author.recipes.all()
+#         if limit:
+#             queryset = queryset[: int(limit)]
+#         return RecipeAddingSerializer(queryset, many=True).data
+
+#     def get_recipes_count(self, obj):
+#         return obj.author.recipes.all().count()
+
+
+# class CheckSubscriptionSerializer(serializers.ModelSerializer):
+#     """Сериализация объектов типа Follow. Проверка подписки."""
+
+#     class Meta:
+#         model = Subscription
+#         fields = ("user", "author")
+
+#     def validate(self, obj):
+#         """Валидация подписки."""
+#         user = obj["user"]
+#         author = obj["author"]
+#         subscribed = user.follower.filter(author=author).exists()
+
+#         if self.context.get("request").method == "POST":
+#             if user == author:
+#                 raise serializers.ValidationError(
+#                     "Ошибка, на себя подписка не разрешена"
+#                 )
+#             if subscribed:
+#                 raise serializers.ValidationError("Ошибка, вы уже подписались")
+#         if self.context.get("request").method == "DELETE":
+#             if user == author:
+#                 raise serializers.ValidationError(
+#                     "Ошибка, отписка от самого себя не разрешена"
+#                 )
+#             if not subscribed:
+#                 raise serializers.ValidationError(
+#                     {"errors": "Ошибка, вы уже отписались"}
+#                 )
+#         return obj
 
 
 class CheckFavouriteSerializer(serializers.ModelSerializer):
