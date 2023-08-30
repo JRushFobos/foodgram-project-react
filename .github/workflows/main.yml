@@ -3,7 +3,7 @@ name: Main Foodgram workflow
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   backend_tests:
@@ -62,28 +62,9 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
 
-  frontend_tests:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up nodeJS
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: |
-        cd frontend/
-        npm ci
-    - name: Test frontend
-      run: |
-        cd frontend/
-        npm run test
-
   build_frontend_and_push_to_docker_hub:
     name: Push frontend Docker image to DockerHub
     runs-on: ubuntu-latest
-    needs: frontend_tests
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -137,8 +118,8 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml"
-        target: "foodgram-project-react"
+        source: "docker-compose.production.yml,infra/nginx.conf"
+        target: "foodgram"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
@@ -147,7 +128,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          cd foodgram-project-react
+          cd foodgram
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d

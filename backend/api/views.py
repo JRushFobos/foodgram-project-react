@@ -1,33 +1,35 @@
 from http import HTTPStatus
 
-from rest_framework import viewsets
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from rest_framework.decorators import action
 from django.db import transaction
-from rest_framework.response import Response
+from django.db.models import Case, IntegerField, Sum, Value, When
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
-from django.db.models import Case, When, IntegerField, Sum, Value
+from rest_framework.response import Response
 
 from recipes.models import (
+    FavouriteRecipe,
     Ingredient,
     Recipe,
-    Tag,
-    FavouriteRecipe,
-    ShoppingList,
     RecipeIngredients,
+    ShoppingList,
+    Tag,
 )
-from .serializers import (
-    IngredientsSerializer,
-    TagsSerializer,
-    RecipesWriteSerializer,
-    RecipesReadSerializer,
-    FavouriteSerializer,
-    ShoppingCartSerializer,
-)
+
 from .filters import RecipesFilter
-from .permissions import IsAuthorOrAdminOrReadOnly
 from .paginations import CustomPageNumberPagination
+from .permissions import IsAuthorOrAdminOrReadOnly
+from .serializers import (
+    FavouriteSerializer,
+    IngredientsSerializer,
+    RecipesReadSerializer,
+    RecipesWriteSerializer,
+    ShoppingCartSerializer,
+    ShortRecipeSerializer,
+    TagsSerializer,
+)
 
 FILE_NAME = "shopping-list.txt"
 TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
@@ -57,7 +59,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
-        """Сериализаторы для рецептов."""
         if self.request.method in SAFE_METHODS:
             return RecipesReadSerializer
         return RecipesWriteSerializer
@@ -90,7 +91,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         detail=True, methods=["POST"], permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk=None):
-        """Добавить в избранное."""
         data = {
             "user": request.user.id,
             "recipe": pk,
@@ -103,7 +103,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @favorite.mapping.delete
     def del_favorite(self, request, pk=None):
-        """Убрать из избранного."""
         data = {
             "user": request.user.id,
             "recipe": pk,
@@ -118,7 +117,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         detail=True, methods=["POST"], permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
-        """Добавить в лист покупок."""
         data = {
             "user": request.user.id,
             "recipe": pk,
@@ -131,7 +129,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @shopping_cart.mapping.delete
     def del_shopping_cart(self, request, pk=None):
-        """Убрать из листа покупок."""
         data = {
             "user": request.user.id,
             "recipe": pk,
@@ -144,15 +141,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic()
     def add_object(self, model, user, pk):
-        """Добавление объектов в избранное/в список покупок."""
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeAddingSerializer(recipe)
+        serializer = ShortRecipeSerializer(recipe)
         return Response(serializer.data, status=HTTPStatus.CREATED)
 
     @transaction.atomic()
     def delete_object(self, model, user, pk):
-        """Удаление объектов из избранного/из списка покупок."""
         model.objects.filter(user=user, recipe__id=pk).delete()
         return Response(status=HTTPStatus.NO_CONTENT)
 

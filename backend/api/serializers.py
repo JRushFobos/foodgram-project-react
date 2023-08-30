@@ -1,15 +1,15 @@
 from django.contrib.auth import get_user_model
-from rest_framework.generics import get_object_or_404
-from rest_framework import serializers
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from recipes.models import (
-    Ingredient,
     FavouriteRecipe,
+    Ingredient,
     Recipe,
     RecipeIngredients,
-    Tag,
     ShoppingList,
+    Tag,
 )
 from users.serializers import CustomUserSerializer
 
@@ -154,6 +154,13 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             instance, ingredients=ingredients, tags=tags
         )
         return super().update(instance, validated_data)
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ("id", "name", "image", "cooking_time")
+        read_only_fields = ("id", "name", "image", "cooking_time")
 
 
 class FavouriteSerializer(serializers.ModelSerializer):
