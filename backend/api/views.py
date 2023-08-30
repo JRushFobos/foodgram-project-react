@@ -22,7 +22,7 @@ from .serializers import (
     TagsSerializer,
     RecipesWriteSerializer,
     RecipesReadSerializer,
-    CheckFavouriteSerializer,
+    FavouriteSerializer,
     ShoppingCartSerializer,
 )
 from .filters import RecipesFilter
@@ -95,7 +95,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             "user": request.user.id,
             "recipe": pk,
         }
-        serializer = CheckFavouriteSerializer(
+        serializer = FavouriteSerializer(
             data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
@@ -108,7 +108,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             "user": request.user.id,
             "recipe": pk,
         }
-        serializer = CheckFavouriteSerializer(
+        serializer = FavouriteSerializer(
             data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
