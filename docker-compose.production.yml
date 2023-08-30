@@ -22,15 +22,15 @@ services:
       - media:/media
   frontend:
     env_file: .env
-    build: jrush/foodgram_frontend
-    command: cp -r /app/build/. /static/
+    image: jrush/foodgram_frontend
     volumes:
       - static:/static
   gateway:
-    image: jrush/foodgram_frontend
-    env_file: .env
+    image: nginx:1.19.3
     ports:
       - 10000:80
     volumes:
+      - ./docs/:/static/api/docs
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf
       - static:/static
       - media:/media/
