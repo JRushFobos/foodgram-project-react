@@ -43,7 +43,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        exclude = ('pub_date',)
+        exclude = ("pub_date",)
 
     def get_ingredients(self, obj):
         ingredients_data = obj.ingredients.through.objects.filter(
@@ -81,7 +81,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        exclude = ('pub_date',)
+        exclude = ("pub_date",)
         read_only_fields = ("author",)
 
     def get_ingredients(self, obj):

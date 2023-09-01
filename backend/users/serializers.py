@@ -113,7 +113,7 @@ class SubscriptionSerializer(CustomUserSerializer):
         if self.context.get("request").method == "DELETE":
             if user == author:
                 raise serializers.ValidationError(
-                    "Ошибка, отписка от самого себя не разрешена"
+                    "Ошибка, отписка от самого себя не допустима"
                 )
             if not subscribed:
                 raise serializers.ValidationError(

@@ -9,7 +9,7 @@ class User(AbstractUser):
     """Модель пользователей"""
 
     email = models.EmailField(
-        'Email',
+        "Email",
         max_length=MAX_EMAIL_LENGTH,
         blank=False,
         unique=True,
@@ -23,24 +23,24 @@ class User(AbstractUser):
     )
 
     first_name = models.CharField(
-        'Имя', blank=False, max_length=MAX_CHAR_LENGTH
+        "Имя", blank=False, max_length=MAX_CHAR_LENGTH
     )
 
     last_name = models.CharField(
-        'Фамилия', blank=False, max_length=MAX_CHAR_LENGTH
+        "Фамилия", blank=False, max_length=MAX_CHAR_LENGTH
     )
 
     password = models.CharField(
-        'Пароль', blank=False, max_length=MAX_CHAR_LENGTH
+        "Пароль", blank=False, max_length=MAX_CHAR_LENGTH
     )
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username", "first_name", "last_name"]
 
     class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-        ordering = ('username',)
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+        ordering = ("username",)
 
     def __str__(self):
         return self.username
@@ -52,29 +52,29 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribes',
-        verbose_name='Подписчик',
+        related_name="subscribes",
+        verbose_name="Подписчик",
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers',
-        verbose_name='Автор',
+        related_name="subscribers",
+        verbose_name="Автор",
     )
 
     class Meta:
-        verbose_name = 'Подписки'
-        verbose_name_plural = 'Подписчики'
+        verbose_name = "Подписки"
+        verbose_name_plural = "Подписчики"
 
         constraints = (
             models.CheckConstraint(
-                check=~models.Q(user=models.F('author')),
-                name='no_self_subscribe',
+                check=~models.Q(user=models.F("author")),
+                name="no_self_subscribe",
             ),
             models.UniqueConstraint(
-                fields=('user', 'author'), name='unique_subscription'
+                fields=("user", "author"), name="unique_subscription"
             ),
         )
 
     def __str__(self):
-        return f'Подписка {self.user} на {self.author}'
+        return f"Подписка {self.user} на {self.author}"
