@@ -43,12 +43,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "djoser",
+    "rest_framework.authtoken",
     "api.apps.ApiConfig",
     "users.apps.UsersConfig",
     "recipes.apps.RecipesConfig",
-    "rest_framework.authtoken",
-    "rest_framework",
-    "djoser",
     "django_filters",
 ]
 
@@ -127,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
@@ -135,21 +135,19 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend"
     ],
-    "DEFAULT_PAGINATION_CLASS": "users.paginations.CustomPageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "api.paginations.PageNumberPagination",
     "PAGE_SIZE": 6,
 }
 
 DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
-        "user_create": "users.serializers.UserCreateSerializer",
-        "user": "users.serializers.CustomUserSerializer",
-        "current_user": "users.serializers.CustomUserSerializer",
+        "user": "api.serializers.UserSerializer",
+        "current_user": "api.serializers.UserSerializer",
     },
     "PERMISSIONS": {
-        "user": ["rest_framework.permissions.IsAuthenticated"],
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
         "user_list": ["rest_framework.permissions.AllowAny"],
-        "token_destroy": ["rest_framework.permissions.IsAuthenticated"],
     },
     "HIDE_USERS": False,
 }

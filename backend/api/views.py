@@ -1,14 +1,20 @@
 from http import HTTPStatus
 
+from djoser.views import UserViewSet
 from django.db import transaction
+from rest_framework import status
 from django.db.models import Case, IntegerField, Sum, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.permissions import (
+    SAFE_METHODS,
+    IsAuthenticated,
+)
 from rest_framework.response import Response
 
+from users.models import Subscription, User
 from recipes.models import (
     FavouriteRecipe,
     Ingredient,
@@ -22,6 +28,8 @@ from .filters import RecipesFilter
 from .paginations import PageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
+    SubscriptionSerializer,
+    CheckSubscriptionSerializer,
     FavouriteSerializer,
     IngredientsSerializer,
     RecipesReadSerializer,
@@ -33,6 +41,67 @@ from .serializers import (
 
 FILE_NAME = "shopping-list.txt"
 TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
+
+
+class UserViewSet(UserViewSet):
+    """Вью сет пользователей и подписок."""
+
+    permission_classes = (IsAuthenticated,)
+    pagination_class = PageNumberPagination
+
+    @action(
+        detail=False,
+        methods=("GET",),
+        serializer_class=SubscriptionSerializer,
+    )
+    def subscriptions(self, request):
+        """Получение списка польвателей"""
+        user = self.request.user
+        user_subscriptions = user.subscribes.all()
+        authors = [item.author.id for item in user_subscriptions]
+        queryset = User.objects.filter(pk__in=authors)
+        paginated_queryset = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(paginated_queryset, many=True)
+
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=("POST", "DELETE"),
+        serializer_class=SubscriptionSerializer,
+    )
+    def subscribe(self, request, id=None):
+        """Создание и удаление подписок."""
+        user = self.request.user
+        author = get_object_or_404(User, pk=id)
+
+        data = {
+            "user": user.id,
+            "author": author.id,
+        }
+
+        if self.request.method == "POST":
+            serializer = CheckSubscriptionSerializer(
+                data=data,
+                context={"request": request},
+            )
+            serializer.is_valid(raise_exception=True)
+            result = Subscription.objects.create(user=user, author=author)
+            serializer = SubscriptionSerializer(
+                result, context={"request": request}
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if self.request.method == "DELETE":
+            serializer = CheckSubscriptionSerializer(
+                data=data,
+                context={"request": request},
+            )
+            serializer.is_valid(raise_exception=True)
+            user.subscribes.filter(author=author).delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
