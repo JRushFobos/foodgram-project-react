@@ -1,17 +1,14 @@
 from http import HTTPStatus
 
-from djoser.views import UserViewSet
 from django.db import transaction
-from rest_framework import status
+
 from django.db.models import Case, IntegerField, Sum, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (
-    SAFE_METHODS,
-    IsAuthenticated,
-)
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from users.models import Subscription, User
@@ -28,6 +25,7 @@ from .filters import RecipesFilter
 from .paginations import PageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
+    UserSerializer,
     SubscriptionSerializer,
     CheckSubscriptionSerializer,
     FavouriteSerializer,
@@ -43,11 +41,12 @@ FILE_NAME = "shopping-list.txt"
 TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 
 
-class UserViewSet(UserViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """Вью сет пользователей и подписок."""
 
-    permission_classes = (IsAuthenticated,)
-    pagination_class = PageNumberPagination
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
 
     @action(
         detail=False,
