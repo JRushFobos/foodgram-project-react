@@ -1,7 +1,7 @@
 from rest_framework.pagination import PageNumberPagination
 
 
-class CustomPageNumberPagination(PageNumberPagination):
+class PageNumberPagination(PageNumberPagination):
     """Кастомный класс для пагинации"""
 
     page_size = 6

@@ -19,8 +19,8 @@ from recipes.models import (
 )
 
 from .filters import RecipesFilter
-from .paginations import CustomPageNumberPagination
-from .permissions import IsAuthorOrAdminOrReadOnly
+from .paginations import PageNumberPagination
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     FavouriteSerializer,
     IngredientsSerializer,
@@ -54,9 +54,9 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет для рецептов."""
 
-    permission_classes = (IsAuthorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly,)
     filterset_class = RecipesFilter
-    pagination_class = CustomPageNumberPagination
+    pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:

@@ -1,15 +1,13 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
-
 from .models import Subscription
 
 User = get_user_model()
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField(
         method_name="get_is_subscribed"
     )
@@ -42,27 +40,6 @@ class CustomUserSerializer(UserSerializer):
         )
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "password",
-        )
-        ordering = (
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "password",
-        )
-
-
 class RecipeInSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
@@ -91,12 +68,36 @@ class SubscriptionSerializer(CustomUserSerializer):
         request = self.context.get("request")
         limit = request.GET.get("recipes_limit")
         queryset = obj.recipes.all()
-        if limit:
-            queryset = queryset[: int(limit)]
-        return RecipeInSubscriptionSerializer(queryset, many=True).data
+        if limit is not None:
+            try:
+                limit = int(limit)
+                if limit >= 0:
+                    queryset = queryset[:limit]
+                else:
+                    return {
+                        "error": "Кол-во рецептов не может "
+                        "быть отрицательным числом",
+                    }
+            except ValueError:
+                return {
+                    "error": "Кол-во рецептов должен быть целым числом",
+                }
+        else:
+            return RecipeInSubscriptionSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
+
+
+class CheckSubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор проверки подписки"""
+
+    class Meta:
+        model = Subscription
+        fields = (
+            "user",
+            "author",
+        )
 
     def validate(self, attrs):
         user = attrs["user"]

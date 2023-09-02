@@ -142,7 +142,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
-        "user_create": "users.serializers.CustomUserCreateSerializer",
+        "user_create": "users.serializers.UserCreateSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
     },
@@ -165,6 +165,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+MAX_CHAR_LENGTH = 150
+MAX_EMAIL_LENGTH = 254
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
