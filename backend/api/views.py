@@ -1,18 +1,15 @@
 from http import HTTPStatus
 
 from django.db import transaction
-
-from django.db.models import Case, IntegerField, Sum, Value, When
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework.viewsets import GenericViewSet
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated, AllowAny
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
-from users.models import Subscription, User
 from recipes.models import (
     FavouriteRecipe,
     Ingredient,
@@ -21,13 +18,12 @@ from recipes.models import (
     ShoppingList,
     Tag,
 )
+from users.models import Subscription, User
 
 from .filters import RecipesFilter
 from .paginations import PageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
-    UserSerializer,
-    SubscriptionSerializer,
     CheckSubscriptionSerializer,
     FavouriteSerializer,
     IngredientsSerializer,
@@ -35,7 +31,9 @@ from .serializers import (
     RecipesWriteSerializer,
     ShoppingCartSerializer,
     ShortRecipeSerializer,
+    SubscriptionSerializer,
     TagsSerializer,
+    UserSerializer,
 )
 
 FILE_NAME = "shopping-list.txt"
@@ -48,6 +46,7 @@ class UserViewSet(GenericViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
+    search_fields = ("username", "email")
 
     @action(
         detail=False,
@@ -70,10 +69,10 @@ class UserViewSet(GenericViewSet):
         methods=("POST", "DELETE"),
         serializer_class=SubscriptionSerializer,
     )
-    def subscribe(self, request, id=None):
+    def subscribe(self, request, pk=None):
         """Создание и удаление подписок."""
         user = self.request.user
-        author = get_object_or_404(User, pk=id)
+        author = get_object_or_404(User, pk=pk)
 
         data = {
             "user": user.id,
@@ -86,9 +85,9 @@ class UserViewSet(GenericViewSet):
                 context={"request": request},
             )
             serializer.is_valid(raise_exception=True)
-            result = Subscription.objects.create(user=user, author=author)
+            Subscription.objects.create(user=user, author=author)
             serializer = SubscriptionSerializer(
-                result, context={"request": request}
+                author, context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -107,6 +106,7 @@ class UserViewSet(GenericViewSet):
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет тегов."""
 
+    permission_classes = (AllowAny,)
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
@@ -115,6 +115,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет ингридиентов."""
 
+    permission_classes = (AllowAny,)
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
     pagination_class = None
@@ -123,6 +124,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет для рецептов."""
 
+    queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
     filterset_class = RecipesFilter
     pagination_class = PageNumberPagination
@@ -132,25 +134,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return RecipesReadSerializer
         return RecipesWriteSerializer
 
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Recipe.objects.annotate(
-                is_favorited=Case(
-                    When(favourites__user=self.request.user, then=1),
-                    default=0,
-                    output_field=IntegerField(),
-                ),
-                is_in_shopping_cart=Case(
-                    When(shoppinglist__user=self.request.user, then=1),
-                    default=0,
-                    output_field=IntegerField(),
-                ),
-            ).prefetch_related("favourites", "shoppinglist")
-        else:
-            return Recipe.objects.annotate(
-                is_favorited=Value(0, output_field=IntegerField()),
-                is_in_shopping_cart=Value(0, output_field=IntegerField()),
-            )
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @action(
         detail=True, methods=["POST"], permission_classes=(IsAuthenticated,)

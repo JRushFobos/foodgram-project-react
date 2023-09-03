@@ -2,8 +2,8 @@ from django.contrib import admin
 
 from .models import (
     FavouriteRecipe,
-    RecipeIngredients,
     Recipe,
+    RecipeIngredients,
     ShoppingList,
     Tag,
 )
@@ -51,7 +51,7 @@ class RecipeInAdmin(admin.ModelAdmin):
         'cooking_time',
     )
     list_editable = ('name',)
-    inlines = (RecipeIngredients,)
+    inlines = (IngredientsInLine,)
     empty_value_display = '-пусто-'
 
 

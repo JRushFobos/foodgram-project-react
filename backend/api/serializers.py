@@ -3,7 +3,6 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
-from users.models import Subscription
 from recipes.models import (
     FavouriteRecipe,
     Ingredient,
@@ -12,6 +11,7 @@ from recipes.models import (
     ShoppingList,
     Tag,
 )
+from users.models import Subscription
 
 User = get_user_model()
 
@@ -32,14 +32,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "is_subscribed",
-        )
-        ordering = (
             "id",
             "username",
             "first_name",
@@ -91,8 +83,7 @@ class SubscriptionSerializer(UserSerializer):
                 return {
                     "error": "Кол-во рецептов должен быть целым числом",
                 }
-        else:
-            return RecipeInSubscriptionSerializer(queryset, many=True).data
+        return RecipeInSubscriptionSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
@@ -111,7 +102,7 @@ class CheckSubscriptionSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = attrs["user"]
         author = attrs["author"]
-        subscribed = user.subscribers.filter(author=author).exists()
+        subscribed = user.subscribes.filter(author=author).exists()
 
         if self.context.get("request").method == "POST":
             if user == author:
@@ -154,17 +145,29 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     tags = TagsSerializer(many=True)
     author = UserSerializer()
     ingredients = serializers.SerializerMethodField()
-    is_favorited = serializers.BooleanField(default=False)
-    is_in_shopping_cart = serializers.BooleanField(default=False)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         exclude = ("pub_date",)
 
+    def get_is_favorited(self, recipe):
+        user = self.context["request"].user
+        return (
+            user.is_authenticated
+            and user.favourites.filter(recipe=recipe).exists()
+        )
+
+    def get_is_in_shopping_cart(self, recipe):
+        user = self.context["request"].user
+        return (
+            user.is_authenticated
+            and user.shoppinglist.filter(recipe=recipe).exists()
+        )
+
     def get_ingredients(self, obj):
-        ingredients_data = obj.ingredients.through.objects.filter(
-            recipe=obj
-        ).values(
+        ingredients_data = obj.ingredients_recipe.values(
             "ingredient__id",
             "ingredient__name",
             "ingredient__measurement_unit",
@@ -201,9 +204,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("author",)
 
     def get_ingredients(self, obj):
-        ingredients_data = obj.ingredients.through.objects.filter(
-            recipe=obj
-        ).values(
+        ingredients_data = obj.ingredients_recipe.values(
             "id",
             "amount",
         )
