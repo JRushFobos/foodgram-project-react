@@ -238,9 +238,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     def add_ingredients_and_tags(self, instance, **validate_data):
         ingredients = validate_data["ingredients"]
         tags = validate_data["tags"]
-        for tag in tags:
-            instance.tags.add(tag)
-
+        instance.tags.set(tags)
         RecipeIngredients.objects.bulk_create(
             [
                 RecipeIngredients(

@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import Case, IntegerField, Sum, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.viewsets import GenericViewSet
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -41,7 +42,7 @@ FILE_NAME = "shopping-list.txt"
 TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(GenericViewSet):
     """Вью сет пользователей и подписок."""
 
     serializer_class = UserSerializer
@@ -57,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Получение списка польвателей"""
         user = self.request.user
         user_subscriptions = user.subscribes.all()
-        authors = [item.author.id for item in user_subscriptions]
+        authors = user_subscriptions.values_list('author__id', flat=True)
         queryset = User.objects.filter(pk__in=authors)
         paginated_queryset = self.paginate_queryset(queryset)
         serializer = self.get_serializer(paginated_queryset, many=True)
@@ -150,10 +151,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 is_favorited=Value(0, output_field=IntegerField()),
                 is_in_shopping_cart=Value(0, output_field=IntegerField()),
             )
-
-    @transaction.atomic()
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
     @action(
         detail=True, methods=["POST"], permission_classes=(IsAuthenticated,)

@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import FavouriteRecipe, Ingredient, Recipe, ShoppingList, Tag
+from .models import (
+    FavouriteRecipe,
+    RecipeIngredients,
+    Recipe,
+    ShoppingList,
+    Tag,
+)
 
 
 @admin.register(Tag)
@@ -12,7 +18,6 @@ class TagInAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(Ingredient)
 class IngredientInAdmin(admin.ModelAdmin):
     """Класс ингредиентов для отображения в админке."""
 
@@ -22,8 +27,8 @@ class IngredientInAdmin(admin.ModelAdmin):
 
 
 class IngredientsInLine(admin.TabularInline):
-    model = Recipe.ingredients.through
-    extra = 0
+    model = RecipeIngredients
+    extra = 1
     mix_num = 1
 
 
@@ -31,34 +36,23 @@ class IngredientsInLine(admin.TabularInline):
 class RecipeInAdmin(admin.ModelAdmin):
     """Класс рецептов для отображения в админке."""
 
-    empty_value_display = "значение отсутствует"
     list_display = (
-        "id",
-        "name",
-        "author",
-        "text",
-        "get_ingredients",
-        "cooking_time",
-        "image",
-        "pub_date",
-        "count_favourites",
+        'id',
+        'name',
+        'cooking_time',
+        'image',
+        'author',
+        'text',
     )
-    list_filter = ("name", "author", "tags")
-    inlines = (IngredientsInLine,)
-    search_fields = ("name", "author")
-
-    def get_ingredients(self, object):
-        """Метод получения ингредиентов в рецепте в админке."""
-        return "\n".join(
-            ingredient.name for ingredient in object.ingredients.all()
-        )
-
-    get_ingredients.short_description = "Ингредиенты"
-
-    def count_favourites(self, obj):
-        return obj.favourites.count()
-
-    count_favourites.short_description = "Количество добавлений в избранное"
+    search_fields = ('name',)
+    list_filter = (
+        'author',
+        'name',
+        'cooking_time',
+    )
+    list_editable = ('name',)
+    inlines = (RecipeIngredients,)
+    empty_value_display = '-пусто-'
 
 
 @admin.register(FavouriteRecipe)
