@@ -21,23 +21,20 @@ class RecipesFilter(FilterSet):
         to_field_name='slug',
     )
 
-    def filter_favorited(self, queryset, name, value):
+    def filter_by_list(self, queryset, name, value, list_name):
         if value and self.request.user.is_authenticated:
             return Recipe.objects.filter(
-                id__in=self.request.user.favourites.all().values_list(
+                id__in=getattr(self.request.user, list_name).values_list(
                     'recipe_id'
                 )
             )
         return queryset
 
+    def filter_favorited(self, queryset, name, value):
+        return self.filter_by_list(queryset, name, value, 'favourites')
+
     def filter_shopping_cart(self, queryset, name, value):
-        if value and self.request.user.is_authenticated:
-            return Recipe.objects.filter(
-                id__in=self.request.user.shoppinglist.all().values_list(
-                    'recipe_id'
-                )
-            )
-        return queryset
+        return self.filter_by_list(queryset, name, value, 'shoppinglist')
 
     class Meta:
         model = Recipe

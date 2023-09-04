@@ -23,10 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context["request"].user
-
         if user.is_anonymous:
             return False
-
         return Subscription.objects.filter(user=user, author=obj).exists()
 
     class Meta:
@@ -75,18 +73,22 @@ class SubscriptionSerializer(UserSerializer):
                 if limit >= 0:
                     queryset = queryset[:limit]
                 else:
-                    return {
-                        "error": "Кол-во рецептов не может "
-                        "быть отрицательным числом",
-                    }
+                    raise serializers.ValidationError(
+                        "Кол-во рецептов не может быть отрицательным числом"
+                    )
             except ValueError:
-                return {
-                    "error": "Кол-во рецептов должен быть целым числом",
-                }
+                raise serializers.ValidationError(
+                    "Кол-во рецептов должен быть целым числом"
+                )
         return RecipeInSubscriptionSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
+
+    def get_user_and_author(self, obj):
+        user_data = UserSerializer(obj.user, context=self.context).data
+        author_data = UserSerializer(obj.author, context=self.context).data
+        return {"user": user_data, "author": author_data}
 
 
 class CheckSubscriptionSerializer(serializers.ModelSerializer):
@@ -167,7 +169,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         )
 
     def get_ingredients(self, obj):
-        ingredients_data = obj.ingredients_recipe.values(
+        ingredients_data = obj.ingredients.values(
             "ingredient__id",
             "ingredient__name",
             "ingredient__measurement_unit",
@@ -204,7 +206,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ("author",)
 
     def get_ingredients(self, obj):
-        ingredients_data = obj.ingredients_recipe.values(
+        ingredients_data = obj.ingredients.values(
             "id",
             "amount",
         )
@@ -253,6 +255,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return instance
 
     def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
         ingredients = validated_data.pop("ingredients")
         tags = validated_data.pop("tags")
         recipe = super().create(validated_data)
@@ -278,49 +281,51 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "name", "image", "cooking_time")
 
 
-class FavouriteSerializer(serializers.ModelSerializer):
-    """Сериализация добавление рецепта в избранное."""
+class BaseFavoriteShoppingCartSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для избранного и списка покупок."""
 
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+
+    class Meta:
+        abstract = True
+
+    def validate(self, obj):
+        """Проверка добавления в избранное или список покупок."""
+        user = self.context["request"].user
+        recipe = obj["recipe"]
+        exists_in_list = self.get_queryset(user).filter(recipe=recipe).exists()
+
+        if self.context.get("request").method == "POST" and exists_in_list:
+            raise serializers.ValidationError("Рецепт уже добавлен.")
+        if (
+            self.context.get("request").method == "DELETE"
+            and not exists_in_list
+        ):
+            raise serializers.ValidationError("Рецепт отсутствует.")
+        return obj
+
+    def get_queryset(self, user):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+
+class FavouriteSerializer(BaseFavoriteShoppingCartSerializer):
+    """Сериализация добавления рецепта в избранное."""
 
     class Meta:
         model = FavouriteRecipe
         fields = ("user", "recipe")
 
-    def validate(self, obj):
-        """Проверка добавления рецепта в избранное."""
-        user = self.context["request"].user
-        recipe = obj["recipe"]
-        favorite = user.favourites.filter(recipe=recipe).exists()
-
-        if self.context.get("request").method == "POST" and favorite:
-            raise serializers.ValidationError(
-                "Рецепт был уже добавлен в избранное"
-            )
-        if self.context.get("request").method == "DELETE" and not favorite:
-            raise serializers.ValidationError("Рецепт отсутствует в избранном")
-        return obj
+    def get_queryset(self, user):
+        return user.favourites
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    """Сериализация добавление в список покупок"""
-
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+class ShoppingCartSerializer(BaseFavoriteShoppingCartSerializer):
+    """Сериализация добавления в список покупок"""
 
     class Meta:
         model = ShoppingList
         fields = ("user", "recipe")
 
-    def validate(self, obj):
-        """Проверка добавления в продуктовую корзину."""
-        user = self.context["request"].user
-        recipe = obj["recipe"]
-        shop_list = user.shoppinglist.filter(recipe=recipe).exists()
-
-        if self.context.get("request").method == "POST" and shop_list:
-            raise serializers.ValidationError("Рецепт уже в списке покупок.")
-        if self.context.get("request").method == "DELETE" and not shop_list:
-            raise serializers.ValidationError("Рецепт не в списке покупок.")
-        return obj
+    def get_queryset(self, user):
+        return user.shoppinglist

@@ -1,11 +1,11 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-User = get_user_model()
+from api.validators import validate_username
 
-MAX_CHAR_LENGTH = 200
-MAX_COLOR_LENGTH = 7
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -13,23 +13,24 @@ class Tag(models.Model):
 
     name = models.CharField(
         verbose_name="Название тега",
-        max_length=MAX_CHAR_LENGTH,
+        max_length=settings.MAX_CHAR_LENGTH,
         unique=True,
+        validators=[validate_username],
     )
     color = models.CharField(
         verbose_name="Цвет тега в формате HEX",
-        max_length=MAX_COLOR_LENGTH,
+        max_length=settings.MAX_COLOR_LENGTH,
         unique=True,
         validators=[
             RegexValidator(
-                "^#([a-fA-F0-9]{6})",
+                "^#([a-fA-F0-9]{3})|^#([a-fA-F0-9]{6})",
                 message="Поле только для HEX формата данных",
             )
         ],
     )
     slug = models.SlugField(
         verbose_name="Слаг тега",
-        max_length=MAX_CHAR_LENGTH,
+        max_length=settings.MAX_CHAR_LENGTH,
         unique=True,
     )
 
@@ -47,19 +48,25 @@ class Ingredient(models.Model):
 
     name = models.CharField(
         verbose_name="Название ингредиента",
-        max_length=MAX_CHAR_LENGTH,
+        max_length=settings.MAX_CHAR_LENGTH,
         blank=False,
+        validators=[validate_username],
     )
     measurement_unit = models.CharField(
         verbose_name="Eдиница измерения ингредиента",
-        max_length=MAX_CHAR_LENGTH,
+        max_length=settings.MAX_CHAR_LENGTH,
         blank=False,
     )
 
     class Meta:
         verbose_name = "ингредиент"
         verbose_name_plural = "ингредиенты"
-        ordering = ("id",)
+        constraints = (
+            models.UniqueConstraint(
+                fields=("name", "measurement_unit"),
+                name="unique_name_measurement_unit",
+            ),
+        )
 
     def __str__(self):
         return f"{self.name}"
@@ -87,7 +94,9 @@ class Recipe(models.Model):
         upload_to="image_recipe/",
     )
     name = models.CharField(
-        verbose_name="Название рецепта", max_length=MAX_CHAR_LENGTH
+        verbose_name="Название рецепта",
+        max_length=settings.MAX_CHAR_LENGTH,
+        validators=[validate_username],
     )
 
     text = models.TextField(
@@ -122,7 +131,7 @@ class RecipeIngredients(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name="ingredients_recipe",
+        related_name="ingredients",
         verbose_name="Рецепт",
     )
     ingredient = models.ForeignKey(

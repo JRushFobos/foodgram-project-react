@@ -1,8 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-
-from foodgram.settings import MAX_CHAR_LENGTH, MAX_EMAIL_LENGTH
-from users.validators import validate_username
 
 
 class User(AbstractUser):
@@ -10,30 +9,27 @@ class User(AbstractUser):
 
     email = models.EmailField(
         "Email",
-        max_length=MAX_EMAIL_LENGTH,
+        max_length=settings.MAX_EMAIL_LENGTH,
         unique=True,
     )
 
     username = models.CharField(
         "Имя пользователя",
-        blank=False,
         unique=True,
-        max_length=MAX_CHAR_LENGTH,
-        validators=[validate_username],
+        max_length=settings.USERNAME_MAX_CHAR_LENGTH,
+        validators=[UnicodeUsernameValidator],
     )
 
     first_name = models.CharField(
         "Имя",
-        blank=False,
-        max_length=MAX_CHAR_LENGTH,
-        validators=[validate_username],
+        max_length=settings.USERNAME_MAX_CHAR_LENGTH,
+        validators=[UnicodeUsernameValidator],
     )
 
     last_name = models.CharField(
         "Фамилия",
-        blank=False,
-        max_length=MAX_CHAR_LENGTH,
-        validators=[validate_username],
+        max_length=settings.USERNAME_MAX_CHAR_LENGTH,
+        validators=[UnicodeUsernameValidator],
     )
 
     USERNAME_FIELD = "email"

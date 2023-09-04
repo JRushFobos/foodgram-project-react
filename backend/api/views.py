@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -36,9 +37,6 @@ from .serializers import (
     UserSerializer,
 )
 
-FILE_NAME = "shopping-list.txt"
-TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
-
 
 class UserViewSet(GenericViewSet):
     """Вью сет пользователей и подписок."""
@@ -73,7 +71,6 @@ class UserViewSet(GenericViewSet):
         """Создание и удаление подписок."""
         user = self.request.user
         author = get_object_or_404(User, pk=pk)
-
         data = {
             "user": user.id,
             "author": author.id,
@@ -100,7 +97,6 @@ class UserViewSet(GenericViewSet):
             user.subscribes.filter(author=author).delete()
 
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -133,9 +129,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return RecipesReadSerializer
         return RecipesWriteSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
     @action(
         detail=True, methods=["POST"], permission_classes=(IsAuthenticated,)
@@ -213,7 +206,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             .annotate(amount=Sum("amount"))
         )
 
-        buy_list_text = TITLE_SHOP_LIST
+        buy_list_text = settings.TITLE_SHOP_LIST
         for item in buy_list:
             ingredient = Ingredient.objects.get(pk=item["ingredient"])
             amount = item["amount"]
@@ -223,6 +216,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
             )
 
         response = HttpResponse(buy_list_text, content_type="text/plain")
-        response["Content-Disposition"] = f"attachment; filename={FILE_NAME}"
+        response[
+            "Content-Disposition"
+        ] = f"attachment; filename={settings.FILE_NAME}"
 
         return response

@@ -163,8 +163,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-MAX_CHAR_LENGTH = 150
+USERNAME_MAX_CHAR_LENGTH = 150
+MAX_CHAR_LENGTH = 200
 MAX_EMAIL_LENGTH = 254
+MAX_COLOR_LENGTH = 7
+FILE_NAME = "shopping-list.txt"
+TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
