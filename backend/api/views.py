@@ -19,7 +19,7 @@ from recipes.models import (
     ShoppingList,
     Tag,
 )
-from users.models import Subscription, User
+from users.models import User
 
 from .filters import RecipesFilter
 from .paginations import PageNumberPagination
@@ -65,7 +65,7 @@ class UserViewSet(GenericViewSet):
     @action(
         detail=True,
         methods=("POST", "DELETE"),
-        serializer_class=SubscriptionSerializer,
+        serializer_class=CheckSubscriptionSerializer,
     )
     def subscribe(self, request, pk=None):
         """Создание и удаление подписок."""
@@ -82,7 +82,7 @@ class UserViewSet(GenericViewSet):
                 context={"request": request},
             )
             serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=user, author=author)
+            serializer.save()
             serializer = SubscriptionSerializer(
                 author, context={"request": request}
             )

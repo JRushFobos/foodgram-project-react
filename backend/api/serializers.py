@@ -85,11 +85,6 @@ class SubscriptionSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         return obj.recipes.all().count()
 
-    def get_user_and_author(self, obj):
-        user_data = UserSerializer(obj.user, context=self.context).data
-        author_data = UserSerializer(obj.author, context=self.context).data
-        return {"user": user_data, "author": author_data}
-
 
 class CheckSubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор проверки подписки"""
@@ -101,19 +96,26 @@ class CheckSubscriptionSerializer(serializers.ModelSerializer):
             "author",
         )
 
+    def create(self, validated_data):
+        user = self.context["request"].user
+        author = validated_data["author"]
+        subscribed = user.subscribes.filter(author=author).exists()
+
+        if user == author:
+            raise serializers.ValidationError(
+                "Ошибка, на себя подписка не разрешена"
+            )
+        if subscribed:
+            raise serializers.ValidationError("Ошибка, вы уже подписались")
+
+        subscription = Subscription.objects.create(user=user, author=author)
+        return subscription
+
     def validate(self, attrs):
         user = attrs["user"]
         author = attrs["author"]
-        subscribed = user.subscribes.filter(author=author).exists()
-
-        if self.context.get("request").method == "POST":
-            if user == author:
-                raise serializers.ValidationError(
-                    "Ошибка, на себя подписка не разрешена"
-                )
-            if subscribed:
-                raise serializers.ValidationError("Ошибка, вы уже подписались")
         if self.context.get("request").method == "DELETE":
+            subscribed = user.subscribes.filter(author=author).exists()
             if user == author:
                 raise serializers.ValidationError(
                     "Ошибка, отписка от самого себя не допустима"
@@ -264,7 +266,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        instance.ingredients.clear()
         instance.tags.clear()
         ingredients = validated_data.pop("ingredients")
         tags = validated_data.pop("tags")
