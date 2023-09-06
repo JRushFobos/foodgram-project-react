@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-from api.validators import validate_username
+from api.validators import validate_name
 
 User = get_user_model()
 
@@ -15,7 +15,7 @@ class Tag(models.Model):
         verbose_name="Название тега",
         max_length=settings.MAX_CHAR_LENGTH,
         unique=True,
-        validators=[validate_username],
+        validators=[validate_name],
     )
     color = models.CharField(
         verbose_name="Цвет тега в формате HEX",
@@ -23,7 +23,7 @@ class Tag(models.Model):
         unique=True,
         validators=[
             RegexValidator(
-                "^#([a-fA-F0-9]{3})|^#([a-fA-F0-9]{6})",
+                "#([a-fA-F0-9]{3,6})",
                 message="Поле только для HEX формата данных",
             )
         ],
@@ -37,7 +37,6 @@ class Tag(models.Model):
     class Meta:
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
-        ordering = ("id",)
 
     def __str__(self):
         return f"{self.name}"
@@ -49,13 +48,11 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name="Название ингредиента",
         max_length=settings.MAX_CHAR_LENGTH,
-        blank=False,
-        validators=[validate_username],
+        validators=[validate_name],
     )
     measurement_unit = models.CharField(
         verbose_name="Eдиница измерения ингредиента",
         max_length=settings.MAX_CHAR_LENGTH,
-        blank=False,
     )
 
     class Meta:
@@ -89,14 +86,13 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name="Изображение рецепта",
-        blank=True,
-        null=True,
+        blank=False,
         upload_to="image_recipe/",
     )
     name = models.CharField(
         verbose_name="Название рецепта",
         max_length=settings.MAX_CHAR_LENGTH,
-        validators=[validate_username],
+        validators=[validate_name],
     )
 
     text = models.TextField(
@@ -123,6 +119,9 @@ class Recipe(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+    def favorites_count(self):
+        return FavouriteRecipe.objects.filter(recipe=self).count()
 
 
 class RecipeIngredients(models.Model):
@@ -153,7 +152,6 @@ class RecipeIngredients(models.Model):
     class Meta:
         verbose_name = "Ингредиент для рецепта"
         verbose_name_plural = "Ингредиенты для рецепта"
-        ordering = ("id",)
 
     def __str__(self):
         return (

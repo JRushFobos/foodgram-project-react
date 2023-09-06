@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -193,13 +194,24 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         return modified_ingredients
 
 
+class IngredientInRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления ингредиентов в рецепт."""
+
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ('id', 'amount')
+
+
 class RecipesWriteSerializer(serializers.ModelSerializer):
     """Сериализатор записи рецептов."""
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all()
     )
-    ingredients = serializers.SerializerMethodField()
+    ingredients = IngredientInRecipeSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
@@ -258,6 +270,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['author'] = self.context['request'].user
+        validated_data['image'] = validated_data.pop('image')
         ingredients = validated_data.pop("ingredients")
         tags = validated_data.pop("tags")
         recipe = super().create(validated_data)
@@ -267,6 +280,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.tags.clear()
+        RecipeIngredients.objects.filter(recipe=instance).delete()
         ingredients = validated_data.pop("ingredients")
         tags = validated_data.pop("tags")
         instance = self.add_ingredients_and_tags(

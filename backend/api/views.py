@@ -21,7 +21,7 @@ from recipes.models import (
 )
 from users.models import User
 
-from .filters import RecipesFilter
+from .filters import IngredientsFilter, RecipesFilter
 from .paginations import PageNumberPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
@@ -114,6 +114,8 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     queryset = Ingredient.objects.all()
     serializer_class = IngredientsSerializer
+    filter_backends = (IngredientsFilter,)
+    search_fields = ('^name',)
     pagination_class = None
 
 

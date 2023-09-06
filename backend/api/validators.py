@@ -1,12 +1,19 @@
-from django.core.exceptions import ValidationError
+import re
+
+from rest_framework import validators
 
 
 def validate_username(value):
-    """Пользовательский валидатор для имени пользователя"""
-    allowed_characters = '$%^&#:;!'
-    for char in value:
-        if char not in allowed_characters and not char.isalnum():
-            raise ValidationError(
-                "Название может содержать только буквы, "
-                "цифры, символы _, @, +, . и -"
-            )
+    """Валидация username."""
+    if value.lower() == 'me':
+        raise validators.ValidationError(
+            'Нельзя использовать "me" в качестве логина.'
+        )
+    return value
+
+
+def validate_name(value):
+    """Валидация name."""
+    if not re.match(r'^[а-яА-ЯёЁa-zA-Z\s]+$', value):
+        raise validators.ValidationError('Введены некорректные символы.')
+    return value
