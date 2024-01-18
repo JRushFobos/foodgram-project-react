@@ -1,0 +1,8 @@
+{
+    "site": "https://jrushfoodgram.sytes.net",
+    "headers": "application/json",
+    "body": {
+        "email": "admin@admin.ru",
+        "password": "admin"
+    }
+}
