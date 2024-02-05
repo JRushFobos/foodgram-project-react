@@ -15,14 +15,14 @@ services:
   backend:
     depends_on:
       - db
-    image: jrush/foodgram_backend
+    image: jrush/homerecipes_backend
     env_file: .env
     volumes:
       - static:/backend_static
       - media:/media
   frontend:
     env_file: .env
-    image: jrush/foodgram_frontend
+    image: jrush/homerecipes_frontend
     volumes:
       - static:/static
   gateway:
