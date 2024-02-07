@@ -34,6 +34,8 @@ CSRF_TRUSTED_ORIGINS = os.getenv(
     "http://localhost,http://127.0.0.1",
 ).split(",")
 
+# Application definition
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -172,7 +174,7 @@ TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 
-STATIC_URL = "/static/"
+STATIC_URL = "https://homerecipes.sytes.net/static/"
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
