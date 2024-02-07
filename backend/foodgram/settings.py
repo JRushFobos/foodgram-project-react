@@ -174,7 +174,7 @@ TITLE_SHOP_LIST = "Список покупок с сайта Foodgram:\n\n"
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 
-STATIC_URL = "https://homerecipes.sytes.net/static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
