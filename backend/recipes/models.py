@@ -123,12 +123,6 @@ class Recipe(models.Model):
     def favorites_count(self):
         return FavouriteRecipe.objects.filter(recipe=self).count()
 
-    @property
-    def image_url(self):
-        if self.image:
-            return f"https://homerecipes.sytes.net/{self.image.url}"
-        return None
-
 
 class RecipeIngredients(models.Model):
     """Модель ингредиентов в рецепте."""
