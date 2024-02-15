@@ -180,8 +180,8 @@ STATIC_ROOT = BASE_DIR / "collected_static"
 # MEDIA_URL = f"{os.getenv('ALLOWED_HOSTS')}/media/"
 # STATIC_URL = f"{os.getenv('ALLOWED_HOSTS')}/static/"
 
-MEDIA_URL = "/media/"
-STATIC_URL = "/static/"
+MEDIA_URL = "https://homerecipes.sytes.net/media/"
+STATIC_URL = "https://homerecipes.sytes.net/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
