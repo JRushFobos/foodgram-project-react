@@ -180,6 +180,7 @@ STATIC_ROOT = BASE_DIR / "collected_static"
 # MEDIA_URL = f"{os.getenv('CSRF_TRUSTED_ORIGINS')}/media/"
 # STATIC_URL = f"{os.getenv('CSRF_TRUSTED_ORIGINS')}/static/"
 
+MEDIA_ROOT = "/media/"
 MEDIA_URL = "/media/"
 STATIC_URL = "/static/"
 
